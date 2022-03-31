@@ -1,11 +1,6 @@
-use std::{
-    env,
-    fs::File,
-    io::{prelude::BufRead, BufReader},
-    num::ParseIntError,
-    str::FromStr,
-};
+use std::time::Instant;
 
+#[derive(Debug)]
 pub struct LanternFish {
     timer: usize,
 }
@@ -20,20 +15,12 @@ impl LanternFish {
     }
 
     pub fn give_birth(&mut self) -> Self {
-        self.timer = 8;
-        Self::new(6)
+        self.timer = 6;
+        Self::new(8)
     }
 
     pub fn decrement(&mut self) {
         self.timer -= 1;
-    }
-}
-
-impl FromStr for LanternFish {
-    type Err = ParseIntError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        s.parse().map(Self::new)
     }
 }
 
@@ -52,21 +39,27 @@ fn step(lanternfishes: &mut Vec<LanternFish>) {
 }
 
 fn main() {
-    let args: Vec<_> = env::args().collect();
-    let f = File::open(&args[1]).unwrap();
-    let f = BufReader::new(f);
+    let iteration = std::env::args().nth(1).unwrap_or(String::from("160"));
+    let iteration = iteration
+        .parse::<usize>()
+        .expect("Could not parse the number of iteration");
 
-    let lines: Vec<String> = f.lines().collect::<Result<_, _>>().unwrap();
-    let split: Vec<&str> = lines[0].split(',').collect();
-    let mut lanternfishes: Vec<LanternFish> = split
-        .iter()
-        .map(|x| x.parse::<LanternFish>().unwrap())
-        .collect();
+    let mut lanternfishes = vec![
+        LanternFish::new(3),
+        LanternFish::new(4),
+        LanternFish::new(3),
+        LanternFish::new(1),
+        LanternFish::new(2),
+    ];
 
-    for i in 0..200 {
-        println!("Computed generation {i}");
+    let start = Instant::now();
+
+    for _ in 0..iteration {
         step(&mut lanternfishes);
     }
 
-    println!("{:?}", lanternfishes.len());
+    let elapsed = start.elapsed();
+
+    println!("Computed {iteration} generation in {elapsed:.2?}");
+    println!("There is a total of {} lanternfishes.", lanternfishes.len());
 }
